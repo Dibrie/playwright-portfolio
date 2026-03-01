@@ -1,0 +1,57 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: fintrack-postgres
+    environment:
+      POSTGRES_DB: fintrack
+      POSTGRES_USER: fintrack
+      POSTGRES_PASSWORD: fintrack_secret
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./fintech-dashboard/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U fintrack -d fintrack']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./fintech-dashboard/backend
+      dockerfile: Dockerfile
+    container_name: fintrack-backend
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgresql://fintrack:fintrack_secret@postgres:5432/fintrack
+      JWT_SECRET: fintrack_jwt_secret_change_in_production
+      JWT_REFRESH_SECRET: fintrack_refresh_secret_change_in_production
+      FRONTEND_URL: http://localhost:5173
+    ports:
+      - '3001:3001'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./fintech-dashboard/backend/src:/app/src
+
+  frontend:
+    build:
+      context: ./fintech-dashboard/frontend
+      dockerfile: Dockerfile
+    container_name: fintrack-frontend
+    environment:
+      VITE_API_URL: http://localhost:3001
+    ports:
+      - '5173:5173'
+    depends_on:
+      - backend
+    volumes:
+      - ./fintech-dashboard/frontend/src:/app/src
+
+volumes:
+  postgres_data:
