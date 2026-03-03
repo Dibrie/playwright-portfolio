@@ -8,7 +8,6 @@ import { authenticate, AuthRequest } from '../middleware/authenticate';
 const router = Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fintrack_jwt_secret';
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'fintrack_refresh_secret';
 const ACCESS_TOKEN_TTL = '15m';
 const REFRESH_TOKEN_TTL_DAYS = 7;
 
@@ -172,13 +171,18 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
 
 // POST /api/auth/logout
 router.post('/logout', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
-  const rawToken = req.cookies?.refreshToken;
-  if (rawToken) {
-    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
-    await pool.query('UPDATE refresh_tokens SET revoked = true WHERE token_hash = $1', [tokenHash]);
+  try {
+    const rawToken = req.cookies?.refreshToken;
+    if (rawToken) {
+      const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+      await pool.query('UPDATE refresh_tokens SET revoked = true WHERE token_hash = $1', [tokenHash]);
+    }
+    res.clearCookie('refreshToken', { path: '/api/auth' });
+    res.json({ message: 'Logged out' });
+  } catch (err) {
+    console.error('Logout error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
-  res.clearCookie('refreshToken', { path: '/api/auth' });
-  res.json({ message: 'Logged out' });
 });
 
 export default router;
