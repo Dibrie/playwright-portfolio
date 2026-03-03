@@ -8,6 +8,7 @@ export class LoginPage {
   readonly rememberMeCheckbox: Locator;
   readonly submitButton: Locator;
   readonly signUpLink: Locator;
+  readonly errorMessage: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -16,6 +17,7 @@ export class LoginPage {
     this.rememberMeCheckbox = page.getByTestId('remember-me');
     this.submitButton = page.getByTestId('submit-button');
     this.signUpLink = page.getByRole('link', { name: 'Sign up' });
+    this.errorMessage = page.getByTestId('error-message');
   }
 
   async goto() {
@@ -27,5 +29,9 @@ export class LoginPage {
     await this.passwordInput.fill(password);
     if (rememberMe) await this.rememberMeCheckbox.check();
     await this.submitButton.click();
+  }
+
+  async getErrorMessage(): Promise<string | null> {
+   return this.errorMessage.textContent();
   }
 }

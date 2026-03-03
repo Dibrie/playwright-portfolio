@@ -1,15 +1,5 @@
 import { test as setup, expect } from '@playwright/test';
-import path from 'path';
-
-export const STORAGE_STATE = path.join(__dirname, '../.auth/user.json');
-
-export const TEST_USER = {
-  email: 'demo@fintrack.io',
-  password: 'password123',
-  fullName: 'Alex Morgan',
-};
-
-export const API_BASE = 'http://localhost:3001/api';
+import { STORAGE_STATE, TEST_USER } from './helpers/constants';
 
 setup('authenticate', async ({ page }) => {
   await page.goto('/login');
