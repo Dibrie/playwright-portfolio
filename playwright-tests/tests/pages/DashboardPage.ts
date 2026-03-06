@@ -28,6 +28,7 @@ export class DashboardPage {
     this.viewAllLink = page.getByRole('link', { name: 'View all' });
     this.navTransactions = page.getByRole('link', { name: 'Transactions' });
     this.navProfile = page.getByRole('link', { name: 'Profile' });
+    this.transactionRows = page.getByTestId('recent-transactions').getByTestId('transaction-row');
   }
 
   async goto() {
